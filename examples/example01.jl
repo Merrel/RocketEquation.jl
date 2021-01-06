@@ -1,11 +1,11 @@
 using Unitful
 using Unitful.DefaultSymbols
 # Load sub-modules
-include("./src/physics.jl")
-include("./src/components.jl")
-include("./src/vehicles.jl")
-include("./src/maneuvers.jl")
-include("./src/properties.jl")
+include("../src/physics.jl")
+include("../src/components.jl")
+include("../src/vehicles.jl")
+include("../src/maneuvers.jl")
+include("../src/properties.jl")
 
 # Starship
 # - Tank/Structure

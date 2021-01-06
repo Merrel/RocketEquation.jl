@@ -14,6 +14,10 @@ struct SingleEngine <: Engine
     min_throttle::Float64	# Minimum amount engine can be throttled down, before it has to be shut down entirely
 end
 
+function SingleEngine(Isp::typeof(1.0s))
+    SingleEngine("Unnamed", 0N, Isp, 0kg, 0.0)
+end
+
 struct EngineCluster <: Engine
     engine::SingleEngine
     count::Int8

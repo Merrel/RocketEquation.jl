@@ -1,1 +1,1 @@
-const g₀ = 9.0665(m/s/s)
+const g₀ = 9.80665(m/s/s)

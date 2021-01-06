@@ -34,6 +34,14 @@ function Rocket(payload::Payload, tank::Tank, engine::Engine; throttle::Number =
     Rocket(payload, tank, engine, throttle, max_propellant(tank), Rocket[])
 end
 
+function without_payload(r::Rocket)
+    Rocket(nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+end
+
+function with_payload(r::Rocket, new_payload::Payload)
+    Rocket(new_payload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+end
+
 """
 Heat shield below and typically no rocket engines or fuel tanks
 """
@@ -50,6 +58,10 @@ mutable struct Satellite <: Payload
 end
 
 struct GenericPayload <: Payload
+	mass::typeof(1.0kg)
+end
+
+struct CrewPayload <: Payload
 	mass::typeof(1.0kg)
 end
 
