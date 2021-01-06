@@ -1,3 +1,5 @@
+export ΔVonly, Transfer, StationKeep, TrajCorrection, RPOD,
+       burn!, mass_ratio, prop_burned
 # -------------------------------------------------------------------------------------------------
 # TYPES
 
@@ -55,6 +57,21 @@ end
 function burn!(r::Rocket, ΔV)
     burn!(r, ΔV.dV)
 end
+
+
+function stage!(r::Rocket)
+    # Get the payload as a new standalone object
+    upper = r.payload
+    # "separate" the active stage by setting it to nopayload
+    lower = Rocket(nopayload, r.tank, r.engine)
+    return (lower, upper)
+end
+
+
+function dock!(new_primary::Payload, new_payload::Payload)
+    Rocket(new_payload, new_primary.tank, new_primary.engine)
+end
+
 
 # r = Starship
 # m₀ = gross(r)

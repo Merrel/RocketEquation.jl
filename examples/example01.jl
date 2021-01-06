@@ -37,4 +37,18 @@ burn!(Starship, tli_2_nrho)
 # burn!(Starship, nrho_2_llo)
 # burn!(Starship, llo_2_moon)
 
+function fly_mission!(r::Rocket, maneuvers::Array{Transfer})
+    for m in maneuvers
+        burn!(r, m)
+    end
+    return nothing
+end
+
+fly_mission!(
+    Starship,
+    [leo_2_tli, tli_2_nrho, nrho_2_llo]
+)
+
 Starship.propellant
+
+typeof([leo_2_tli, tli_2_nrho, nrho_2_llo])

@@ -1,5 +1,5 @@
 export  SpaceVehicle, 
-        Payload, NoPayload, nopayload,
+        Payload, NoPayload, nopayload, GenericPayload,
         Rocket, Capsule, SpaceProbe, Satellite
 
 """
@@ -9,7 +9,10 @@ abstract type Payload end
 
 "Rocket with no payload, such as a detached booster."
 struct NoPayload <: Payload
+    mass::typeof(1.0kg)
 end
+
+NoPayload() = NoPayload(0.0kg)
 
 const nopayload = NoPayload()
 
@@ -46,24 +49,30 @@ mutable struct Satellite <: Payload
 	mass::typeof(1.0kg)
 end
 
+struct GenericPayload <: Payload
+	mass::typeof(1.0kg)
+end
+
 ####################### SpaceVehicle #####################################
 
 "Represents a rocket in flight, with all its stages and payload."
 mutable struct SpaceVehicle
 	active_stage::Payload
     # body::RigidBody
-	gravity::Bool		# Is rocket affected by gravity
-end
-
-function SpaceVehicle(r::Payload, gravity::Bool = true)
-	# body = RigidBody(mass(r), 0.0)
-	SpaceVehicle(r, gravity)
-end
-
-function SpaceVehicle(rockets::Array{Rocket})
-    ship = SpaceVehicle()
-    pushfirst!(ship, rockets...)
-    return ship
+	# gravity::Bool		# Is rocket affected by gravity
 end
 
 SpaceVehicle() = SpaceVehicle(nopayload)
+
+# function SpaceVehicle(r::Payload, gravity::Bool = true)
+# 	# body = RigidBody(mass(r), 0.0)
+# 	SpaceVehicle(r, gravity)
+# end
+
+# function SpaceVehicle(rockets::Array{Rocket})
+#     ship = SpaceVehicle()
+#     pushfirst!(ship, rockets...)
+#     return ship
+# end
+
+
