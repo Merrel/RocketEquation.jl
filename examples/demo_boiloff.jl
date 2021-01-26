@@ -33,3 +33,5 @@ uconvert(kg, compute_boiloff(mᵢ, r, d))
 @show Starship.propellant
 boiloff!(Starship, 0.01/hr, 10hr)
 @show Starship.propellant
+
+boiloff!(Starship, 0.01/hr, 10hr, verbose=true)
