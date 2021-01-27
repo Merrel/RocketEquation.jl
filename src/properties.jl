@@ -7,6 +7,9 @@ propellant(r::Rocket) = r.propellant
 
 max_propellant(t::Tank) = t.total_mass - t.dry_mass
 
+name(r::Rocket) = r.name
+name(p::Payload) = p.name
+
 gross(p::Payload) = p.mass
 gross(r::Rocket) = gross(r.payload) + r.tank.dry_mass + r.propellant
 # inert(r::Rocket) = r.payload.mass + r.tank.dry_mass

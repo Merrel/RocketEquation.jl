@@ -14,15 +14,18 @@ struct NoPayload <: Payload
 end
 
 NoPayload() = NoPayload(0.0kg)
-
 const nopayload = NoPayload()
+name(p::NoPayload) = nothing
 
+# -------------------------------------------------------------------------------------------------
+# Rockets
 
 """
 A single stage rocket, with a payload which could potentially be another rocket 
 thus making it multi-stage.
 """
 mutable struct Rocket <: Payload
+    name::String
     payload::Payload
     tank::Tank
     engine::Engine
@@ -31,49 +34,71 @@ mutable struct Rocket <: Payload
     sideboosters::Array{Rocket} # Side booster can fire engines along with core stage
 end
 
+function Rocket(name::String, payload::Payload, tank::Tank, engine::Engine; throttle::Number = 1.0)
+    Rocket(name, payload, tank, engine, throttle, max_propellant(tank), Rocket[])
+end
+
 function Rocket(payload::Payload, tank::Tank, engine::Engine; throttle::Number = 1.0)
-    Rocket(payload, tank, engine, throttle, max_propellant(tank), Rocket[])
+    Rocket("unnamed", payload, tank, engine, throttle, max_propellant(tank), Rocket[])
 end
 
 function without_payload(r::Rocket)
-    Rocket(nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+    Rocket(r.name, nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
 end
 
 function with_payload(r::Rocket, new_payload::Payload)
-    Rocket(new_payload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
-end
-
-"""
-Heat shield below and typically no rocket engines or fuel tanks
-"""
-mutable struct Capsule <: Payload
-	mass::typeof(1.0kg)
-end
-
-struct SpaceProbe <: Payload
-    mass::typeof(1.0kg)
-end
-
-mutable struct Satellite <: Payload
-	mass::typeof(1.0kg)
-end
-
-struct GenericPayload <: Payload
-	mass::typeof(1.0kg)
-end
-
-struct CrewPayload <: Payload
-	mass::typeof(1.0kg)
+    Rocket(r.name, new_payload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
 end
 
 function Base.show(io::IO, r::Rocket)
-    println("Rocket:")
+    println("Rocket: $(r.name)")
     println(" - Current Gross  = $(round(typeof(1kg), gross(r)))")
     println(" - Prop Available = $(round(typeof(1kg), r.propellant))")
     percent_available = r.propellant / max_propellant(r.tank) * 100
     println("                  = $(round(percent_available, digits=3)) %")
     println(" - Payload: $(r.payload)")
 end
+
+# -------------------------------------------------------------------------------------------------
+# Payloads
+
+struct GenericPayload <: Payload
+    name::String
+	mass::typeof(1.0kg)
+end
+
+"""
+Heat shield below and typically no rocket engines or fuel tanks
+"""
+mutable struct Capsule <: Payload
+    name::String
+	mass::typeof(1.0kg)
+end
+
+struct SpaceProbe <: Payload
+    name::String
+    mass::typeof(1.0kg)
+end
+
+mutable struct Satellite <: Payload
+    name::String
+	mass::typeof(1.0kg)
+end
+
+struct CrewPayload <: Payload
+    name::String
+	mass::typeof(1.0kg)
+end
+
+# function Base.show(io::IO, p::Payload)
+#     println("Payload: $(p.name)")
+#     println(" - Mass  = $(round(typeof(1kg), gross(r)))")
+#     try
+#         println(" - Payload: $(r.payload)")
+#     catch
+#         println(" - Payload: NONE")
+#     end
+# end
 
 ####################### SpaceVehicle #####################################
 
