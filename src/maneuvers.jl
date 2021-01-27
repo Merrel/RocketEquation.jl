@@ -6,10 +6,12 @@ export ΔVonly, Transfer, StationKeep, TrajCorrection, RPOD,
 abstract type Maneuver end
 abstract type AbstractDocking <: Maneuver end
 abstract type AbstractStaging <: Maneuver end
+abstract type AbstractCrewTransfer <: Maneuver end
 abstract type ΔV <: Maneuver end
 
 struct Docking <: AbstractDocking end
 struct Staging <: AbstractStaging end
+struct CrewTransfer <: AbstractCrewTransfer end
 
 struct ΔVonly <: ΔV
     dV::typeof(1.0m/s)
