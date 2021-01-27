@@ -82,13 +82,17 @@ function burn!(r::Rocket, ΔV)
     burn!(r, ΔV.dV)
 end
 
-function burn!(r::Rocket, ΔV; verbose::Bool=false)
+function burn!(r::Rocket, ΔV::Transfer; verbose::Bool=false, missionlog=nothing)
     if verbose
         println("\nSegment from $(ΔV.src) -> $(ΔV.dst): $(ΔV.dV)")
     end
     burn!(r, ΔV.dV)
     if verbose
         status(r)
+    end
+    # Mission Logging
+    if missionlog != nothing
+        push!(df, [typeof(ΔV) ΔV.src ΔV.dst ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
     end
 end
 
