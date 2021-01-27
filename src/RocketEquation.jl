@@ -3,7 +3,8 @@ using Unitful
 using Unitful.DefaultSymbols
 
 # Add additional units to the namespace
-hr = u"hr"
+hr =  3600s
+day = 24hr
 
 # Load sub-modules
 include("physics.jl")

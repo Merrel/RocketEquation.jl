@@ -1,3 +1,7 @@
+
+abstract type AbstractBoiloff end
+struct Boiloff <: AbstractBoiloff end
+
 # ---------------------------------
 # Boiloff FUNCTIONS
 
@@ -21,7 +25,7 @@ boiloff!(r::Rocket, rate, duration)
 
 Compute boiloff for given rocket and update its propellant load.
 """
-function boiloff!(r::Rocket, rate, duration; verbose=false)
+function boiloff!(r::Rocket, rate, duration; verbose=false, missionlog=nothing)
     if verbose
         init_prop = r.propellant
     end
@@ -29,8 +33,14 @@ function boiloff!(r::Rocket, rate, duration; verbose=false)
     if verbose
         end_prop = r.propellant
         δ_prop = init_prop - end_prop
-        println(" > Boiloff of $δ_prop")
+        println("\n  $(r.name)")
+        println(  "    > Boiloff (rate=$(uconvert(u"hr^-1", rate)) for $duration -> $(round(typeof(1kg), δ_prop))")
     end
+
+    if missionlog != nothing
+        push!(missionlog, [Boiloff last(missionlog).End last(missionlog).End 0m/s name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+    end
+
     return nothing
 end
 

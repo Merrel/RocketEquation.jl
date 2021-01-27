@@ -98,5 +98,15 @@ burn!(Starship, nrho_2_llo, verbose=true, missionlog=events)
 # action = nrho_2_llo; vehicle = Starship;
 # push!(df, [typeof(action) action.src action.dst action.dV name(vehicle) gross(vehicle) split(vehicle.name, " >> ")[1] propellant(vehicle)])
 
-# #
+# 5. Descent & Landing: LLO to Moon
+burn!(Starship, llo_2_moon, verbose=true, missionlog=events)
+print_location("Moon")
+
+boiloff!(Starship, 0.002/hr, 72hr, verbose=true, missionlog=events)
+
+# # 6. Ascent: Moon to LLO
+# burn!(Starship, moon_2_LLO, verbose=true, missionlog=events)
+# print_location("LLO")
+
+
 events
