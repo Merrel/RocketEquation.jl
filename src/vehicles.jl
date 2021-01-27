@@ -1,3 +1,4 @@
+import Base.show
 export  SpaceVehicle, 
         Payload, NoPayload, nopayload, GenericPayload,
         Rocket, Capsule, SpaceProbe, Satellite
@@ -63,6 +64,15 @@ end
 
 struct CrewPayload <: Payload
 	mass::typeof(1.0kg)
+end
+
+function Base.show(io::IO, r::Rocket)
+    println("Rocket:")
+    println(" - Current Gross  = $(round(typeof(1kg), gross(r)))")
+    println(" - Prop Available = $(round(typeof(1kg), r.propellant))")
+    percent_available = r.propellant / max_propellant(r.tank) * 100
+    println("                  = $(round(percent_available, digits=3)) %")
+    println(" - Payload: $(r.payload)")
 end
 
 ####################### SpaceVehicle #####################################

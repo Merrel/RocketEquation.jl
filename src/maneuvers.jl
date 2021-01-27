@@ -3,7 +3,13 @@ export ΔVonly, Transfer, StationKeep, TrajCorrection, RPOD,
 # -------------------------------------------------------------------------------------------------
 # TYPES
 
-abstract type ΔV end
+abstract type Maneuver end
+abstract type AbstractDocking <: Maneuver end
+abstract type AbstractStaging <: Maneuver end
+abstract type ΔV <: Maneuver end
+
+struct Docking <: AbstractDocking end
+struct Staging <: AbstractStaging end
 
 struct ΔVonly <: ΔV
     dV::typeof(1.0m/s)
@@ -61,12 +67,12 @@ function burn!(r::Rocket, ΔV::typeof(1.0m/s))
     m₀ = gross(r)
     mₚ = m₀ - m₀ * exp(-ΔV / (g₀ * r.engine.Isp))
     r.propellant -= mₚ
-    try
-        @assert r.propellant >= 0kg
-    catch
-        println("!!! ERROR: used too much propellant")
-        println("    _______________________________")
-    end
+    # try
+    #     @assert r.propellant >= 0kg
+    # catch
+    #     println("!!! ERROR: used too much propellant")
+    #     println("    _______________________________")
+    # end
     return nothing
 end
 
@@ -74,10 +80,44 @@ function burn!(r::Rocket, ΔV)
     burn!(r, ΔV.dV)
 end
 
-function burn!(r::Rocket, ΔV; log::Bool=false)
-    println("\nSegment from $(ΔV.src) -> $(ΔV.dst): $(ΔV.dV)")
+function burn!(r::Rocket, ΔV; verbose::Bool=false)
+    if verbose
+        println("\nSegment from $(ΔV.src) -> $(ΔV.dst): $(ΔV.dV)")
+    end
     burn!(r, ΔV.dV)
-    status(r)
+    if verbose
+        status(r)
+    end
+end
+
+function burn!(r::Rocket, ΔV::ΔVonly; verbose::Bool=false)
+    if verbose
+        println("\nΔV = $(ΔV.dV)")
+    end
+    burn!(r, ΔV.dV)
+    if verbose
+        status(r)
+    end
+end
+
+function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false)
+    if verbose
+        println("\nStationkeepingin $(ΔV.orbit): $(ΔV.dV)")
+    end
+    burn!(r, ΔV.dV)
+    if verbose
+        status(r)
+    end
+end
+
+function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false)
+    if verbose
+        println("\nTrajectory correction during $(ΔV.src) -> $(ΔV.dst): $(ΔV.dV)")
+    end
+    burn!(r, ΔV.dV)
+    if verbose
+        status(r)
+    end
 end
 
 
