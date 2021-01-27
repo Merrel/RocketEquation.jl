@@ -14,9 +14,11 @@ struct NoPayload <: Payload
 end
 
 NoPayload() = NoPayload(0.0kg)
-
 const nopayload = NoPayload()
+name(p::NoPayload) = nothing
 
+# -------------------------------------------------------------------------------------------------
+# Rockets
 
 """
 A single stage rocket, with a payload which could potentially be another rocket 
@@ -48,29 +50,6 @@ function with_payload(r::Rocket, new_payload::Payload)
     Rocket(r.name, new_payload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
 end
 
-"""
-Heat shield below and typically no rocket engines or fuel tanks
-"""
-mutable struct Capsule <: Payload
-	mass::typeof(1.0kg)
-end
-
-struct SpaceProbe <: Payload
-    mass::typeof(1.0kg)
-end
-
-mutable struct Satellite <: Payload
-	mass::typeof(1.0kg)
-end
-
-struct GenericPayload <: Payload
-	mass::typeof(1.0kg)
-end
-
-struct CrewPayload <: Payload
-	mass::typeof(1.0kg)
-end
-
 function Base.show(io::IO, r::Rocket)
     println("Rocket: $(r.name)")
     println(" - Current Gross  = $(round(typeof(1kg), gross(r)))")
@@ -79,6 +58,47 @@ function Base.show(io::IO, r::Rocket)
     println("                  = $(round(percent_available, digits=3)) %")
     println(" - Payload: $(r.payload)")
 end
+
+# -------------------------------------------------------------------------------------------------
+# Payloads
+
+struct GenericPayload <: Payload
+    name::String
+	mass::typeof(1.0kg)
+end
+
+"""
+Heat shield below and typically no rocket engines or fuel tanks
+"""
+mutable struct Capsule <: Payload
+    name::String
+	mass::typeof(1.0kg)
+end
+
+struct SpaceProbe <: Payload
+    name::String
+    mass::typeof(1.0kg)
+end
+
+mutable struct Satellite <: Payload
+    name::String
+	mass::typeof(1.0kg)
+end
+
+struct CrewPayload <: Payload
+    name::String
+	mass::typeof(1.0kg)
+end
+
+# function Base.show(io::IO, p::Payload)
+#     println("Payload: $(p.name)")
+#     println(" - Mass  = $(round(typeof(1kg), gross(r)))")
+#     try
+#         println(" - Payload: $(r.payload)")
+#     catch
+#         println(" - Payload: NONE")
+#     end
+# end
 
 ####################### SpaceVehicle #####################################
 

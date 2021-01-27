@@ -131,7 +131,7 @@ end
 
 
 function dock!(new_primary::Payload, new_payload::Payload)
-    new_name = "$(new_primary.name)_$(new_payload.name)"
+    new_name = "$(new_primary.name) >> $(new_payload.name)"
     Rocket(new_name, new_payload, new_primary.tank, new_primary.engine)
 end
 
