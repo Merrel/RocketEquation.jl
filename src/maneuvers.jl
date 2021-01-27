@@ -1,3 +1,6 @@
+using Unitful
+using Unitful.DefaultSymbols
+import Base.-
 export ΔVonly, Transfer, StationKeep, TrajCorrection, RPOD,
        burn!, mass_ratio, prop_burned
 # -------------------------------------------------------------------------------------------------
@@ -24,10 +27,12 @@ struct Transfer <: ΔV
 end
 
 struct StationKeep <: ΔV
+    orbit::String
     dV::typeof(1.0m/s)
 end
 
 struct TrajCorrection <: ΔV
+    transfer::Transfer
     dV::typeof(1.0m/s)
 end
 
@@ -37,6 +42,9 @@ struct RPOD <: ΔV
     dV::typeof(1.0m/s)
 end
 
+-(x::ΔV, y::ΔV) = ΔVonly(x.dV - y.dV)
+-(x::Transfer, y::Transfer) = Transfer(y.src, y.dst, x.dV - y.dV)
+
 # -------------------------------------------------------------------------------------------------
 # FUNCTIONS - Diagnostics
 
@@ -44,7 +52,7 @@ function status(r::Rocket)
     println("  $(r.name)")
     println("  - Gross:           $(round(typeof(1kg), gross(r)))")
     println("  - Prop Available:  $(round(typeof(1kg), r.propellant))")
-    println("  - Prop Used:       $(round(typeof(1kg), (Starship.tank.total_mass - Starship.tank.dry_mass) - r.propellant))")
+    println("  - Prop Used:       $(round(typeof(1kg), (r.tank.total_mass - r.tank.dry_mass) - r.propellant))")
 end
 
 function mass_ratio(r::Rocket, ΔV::typeof(1.0m/s))
