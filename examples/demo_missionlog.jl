@@ -66,39 +66,37 @@ llo_2_nrho =   Transfer("LLO",  "NRHO",  670m/s )
 # Fly Mission
 
 # 0. Initial Status
-println("\n=============================================\nBegin Mission")
-df = DataFrame(
-    Event = Type[], Start=String[], End=String[], ΔV = [], VehicleName=String[], VehicleGross=[], ActiveName=String[], ActiveProp = []
-)
+events = begin_mission()
 status(Starship_ESM_Orion)
 print_location("LEO")
 
 
 # 1. Earth Departure: LEO to TLI
-burn!(Starship_ESM_Orion, leo_2_tli, verbose=true, missionlog=df)
+burn!(Starship_ESM_Orion, leo_2_tli, verbose=true, missionlog=events)
 # action = leo_2_tli; vehicle = Starship_ESM_Orion;
 # push!(df, [typeof(action) action.src action.dst action.dV name(vehicle) gross(vehicle) split(vehicle.name, " >> ")[1] propellant(vehicle)])
 
 # 2. NRHO Arrival: TLI to NRHO
-burn!(Starship_ESM_Orion, tli_2_nrho, verbose=true, missionlog=df)
+burn!(Starship_ESM_Orion, tli_2_nrho, verbose=true, missionlog=events)
 # action = tli_2_nrho; vehicle = Starship_ESM_Orion;
 # push!(df, [typeof(action) action.src action.dst action.dV name(vehicle) gross(vehicle) split(vehicle.name, " >> ")[1] propellant(vehicle)])
 # print_location("NRHO")
 
 # 3. Stage and leave ORION in NRHO
 # println("\n\n--- STAGE: Crew -> Starship\n")
-# (Starship, ESM_Orion) =         stage!(Starship_ESM_Orion)
+(Starship, ESM_Orion) =         stage!(Starship_ESM_Orion, missionlog=events)
 # push!(df, [Staging last(df).End last(df).End 0m/s name(Starship) gross(Starship) split(Starship.name, " >> ")[1] propellant(Starship)])
 # push!(df, [Staging last(df).End last(df).End 0m/s name(ESM_Orion) gross(ESM_Orion) split(ESM_Orion.name, " >> ")[1] propellant(ESM_Orion)])
 
-# # 3b. Crew transfer
-# (Starship, ESM_Orion) = transfer_crew!(ESM_Orion, Starship)
-# push!(df, [CrewTransfer last(df).End last(df).End 0m/s name(Starship) gross(Starship) split(Starship.name, " >> ")[1] propellant(Starship)])
-# push!(df, [CrewTransfer last(df).End last(df).End 0m/s name(ESM_Orion) gross(ESM_Orion) split(ESM_Orion.name, " >> ")[1] propellant(ESM_Orion)])
+# 3b. Crew transfer
+(Starship, ESM_Orion) = transfer_crew!(ESM_Orion, Starship, missionlog=events)
+# push!(events, [CrewTransfer last(events).End last(events).End 0m/s name(ESM_Orion) gross(ESM_Orion) split(ESM_Orion.name, " >> ")[1] propellant(ESM_Orion)])
+# push!(events, [CrewTransfer last(events).End last(events).End 0m/s name(Starship) gross(Starship) split(Starship.name, " >> ")[1] propellant(Starship)])
 
-# # 4. To LLO: NRHO to LLO
-# burn!(Starship, nrho_2_llo)
+# 4. To LLO: NRHO to LLO
+burn!(Starship, nrho_2_llo, verbose=true, missionlog=events)
 # action = nrho_2_llo; vehicle = Starship;
 # push!(df, [typeof(action) action.src action.dst action.dV name(vehicle) gross(vehicle) split(vehicle.name, " >> ")[1] propellant(vehicle)])
 
-# #Fixes #3
+# #
+events

@@ -65,6 +65,15 @@ end
 # -------------------------------------------------------------------------------------------------
 # FUNCTIONS - Actions
 
+function begin_mission()
+    println("\n=============================================\nBegin Mission")
+    missionlog = DataFrame(
+        Event = Type[], Start=String[], End=String[], ΔV = [], VehicleName=String[], VehicleGross=[], ActiveName=String[], ActiveProp = []
+    )
+    return missionlog
+end
+
+
 function burn!(r::Rocket, ΔV::typeof(1.0m/s))
     m₀ = gross(r)
     mₚ = m₀ - m₀ * exp(-ΔV / (g₀ * r.engine.Isp))
@@ -92,8 +101,9 @@ function burn!(r::Rocket, ΔV::Transfer; verbose::Bool=false, missionlog=nothing
     end
     # Mission Logging
     if missionlog != nothing
-        push!(df, [typeof(ΔV) ΔV.src ΔV.dst ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+        push!(missionlog, [typeof(ΔV) ΔV.src ΔV.dst ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
     end
+    return nothing
 end
 
 function burn!(r::Rocket, ΔV::ΔVonly; verbose::Bool=false)
@@ -106,7 +116,7 @@ function burn!(r::Rocket, ΔV::ΔVonly; verbose::Bool=false)
     end
 end
 
-function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false)
+function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false, missionlog=nothing)
     if verbose
         println("\nStation-keeping $(ΔV.orbit): $(ΔV.dV)")
     end
@@ -114,9 +124,14 @@ function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false)
     if verbose
         status(r)
     end
+    # Mission Logging
+    if missionlog != nothing
+        push!(missionlog, [typeof(ΔV) ΔV.orbit ΔV.orbit ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+    end
+    return nothing
 end
 
-function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false)
+function burn!(r::Rocket, ΔV::TrajCorrection; verbose::Bool=false, missionlog=nothing)
     if verbose
         println("\nTrajectory correction during $(ΔV.src) -> $(ΔV.dst): $(ΔV.dV)")
     end
@@ -124,14 +139,24 @@ function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false)
     if verbose
         status(r)
     end
+    # Mission Logging
+    if missionlog != nothing
+        push!(missionlog, [typeof(ΔV) ΔV.src ΔV.dst ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+    end
+    return nothing
 end
 
 
-function stage!(r::Rocket)
+function stage!(r::Rocket; missionlog=nothing)
     # Get the payload as a new standalone object
     upper = r.payload
     # "separate" the active stage by setting it to nopayload
     lower = Rocket(split(r.name, " >> ")[1], nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+
+    if missionlog != nothing
+        push!(missionlog, [Staging last(missionlog).End last(missionlog).End 0m/s name(lower) gross(lower) split(lower.name, " >> ")[1] propellant(lower)])
+        push!(missionlog, [Staging last(missionlog).End last(missionlog).End 0m/s name(upper) gross(upper) split(upper.name, " >> ")[1] propellant(upper)])
+    end
     return (lower, upper)
 end
 
@@ -151,7 +176,7 @@ end
 # -------------------------------------------------------------------------------------------------
 # Crew Movements
 
-function transfer_crew!(crewed::Rocket, uncrewed::Rocket)
+function transfer_crew!(crewed::Rocket, uncrewed::Rocket; missionlog=nothing)
     # Extract the crew
     crew = get_crew(crewed)
     # remove the crew from the old crewed
@@ -159,6 +184,12 @@ function transfer_crew!(crewed::Rocket, uncrewed::Rocket)
     # Add the crew to the old uncrewed
     new_crewed = add_crew(uncrewed, crew)
     new_crewed.name = new_crewed.name * " >> " * crew.name
+
+    if missionlog != nothing
+        push!(missionlog, [CrewTransfer last(missionlog).End last(missionlog).End 0m/s name(new_uncrewed) gross(new_uncrewed) split(new_uncrewed.name, " >> ")[1] propellant(new_uncrewed)])
+        push!(missionlog, [CrewTransfer last(missionlog).End last(missionlog).End 0m/s name(new_crewed) gross(new_crewed) split(new_crewed.name, " >> ")[1] propellant(new_crewed)])
+    end
+
     return (new_crewed, new_uncrewed)
 end
 
