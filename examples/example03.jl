@@ -1,17 +1,10 @@
-using Unitful
-using Unitful.DefaultSymbols
-# Load sub-modules
-include("../src/physics.jl")
-include("../src/components.jl")
-include("../src/vehicles.jl")
-include("../src/maneuvers.jl")
-include("../src/properties.jl")
+include("../src/RocketEquation.jl")
 
 # -------------------------------------------------------------------------------------------------
 # Assembly Define Payload
 crew      = 100kg
 eva_tools = 100kg
-Crew = CrewPayload("CrewCapsule", 4crew + 1eva_tools)
+Crew = CrewPayload("Crew", 4crew + 1eva_tools)
 
 # -------------------------------------------------------------------------------------------------
 # Define Vehicles
@@ -24,7 +17,7 @@ tank_starship = Tank(mᵢ_starship, mᵢ_starship+mₚ_starship)
 # - Engines
 Raptor = SingleEngine("RaptorVacuum", 2200.0kN, 380.0s, 1500.0kg, 0.4)
 # - Assemble Stage
-Starship = Rocket(nopayload, tank_starship, EngineCluster(Raptor, 6))
+Starship = Rocket("Starship", nopayload, tank_starship, EngineCluster(Raptor, 6))
 
 # Orion
 # - Tank/Structure
@@ -34,7 +27,7 @@ tank_orion = Tank(mᵢ_orion, mᵢ_orion+mₚ_orion)
 # - Engines
 engine_orion = SingleEngine(320.0s)
 # - Assemble
-Orion = Rocket(nopayload, tank_orion, engine_orion)
+Orion = Rocket("Orion", nopayload, tank_orion, engine_orion)
 
 # ESM: European service module
 mᵢ_esm =   6_900kg
@@ -43,7 +36,7 @@ tank_esm = Tank(mᵢ_esm, mᵢ_esm+mₚ_esm)
 # - Engines
 engine_esm = SingleEngine(320.0s)
 # - Assemble
-ESM = Rocket(nopayload, tank_esm, engine_esm)
+ESM = Rocket("ESM", nopayload, tank_esm, engine_esm)
 
 # -------------------------------------------------------------------------------------------------
 # Assembly Vehicles
@@ -74,7 +67,7 @@ llo_2_nrho =   Transfer("LLO",  "NRHO",  670m/s )
 # 0. Initial Status
 println("\n=============================================\nBegin Mission")
 status(Starship_ESM_Orion)
-gross(Starship_ESM_Orion)
+print_location("LEO")
 
 
 # 1. Earth Departure: LEO to TLI
@@ -82,6 +75,7 @@ burn!(Starship_ESM_Orion, leo_2_tli, verbose=true)
 
 # 2. NRHO Arrival: TLI to NRHO
 burn!(Starship_ESM_Orion, tli_2_nrho, verbose=true)
+print_location("NRHO")
 
 # 3. Stage and leave ORION in NRHO
 println("\n\n--- STAGE: Crew -> Starship\n")
@@ -90,15 +84,19 @@ println("\n\n--- STAGE: Crew -> Starship\n")
 
 # 4. To LLO: NRHO to LLO
 burn!(Starship, nrho_2_llo, verbose=true)
+print_location("LLO")
 
 # 5. Descent & Landing: LLO to Moon
 burn!(Starship, llo_2_moon, verbose=true)
+print_location("Moon")
 
 # 6. Ascent: Moon to LLO
 burn!(Starship, moon_2_LLO, verbose=true)
+print_location("LLO")
 
 # 6. Depart LLO: LLO to NRHO
 burn!(Starship, llo_2_nrho, verbose=true)
+print_location("NRHO")
 
 # 7. Stage and leave ORION in NRHO
 println("\n\n--- TRANSFER: Crew -> Orion+ESM\n")
@@ -107,6 +105,7 @@ println("\n\n--- TRANSFER: Crew -> Orion+ESM\n")
 # 6. Orion Leaves NRHO: NRHO to Earth
 nrho_2_earth = Transfer("NRHO", "Earth", 450m/s )
 burn!(ESM_Orion, nrho_2_earth, verbose=true)
+print_location("Earth Entry")
 
 # # (ESM, Orion) = stage!(ESM_Orion)
 

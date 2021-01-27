@@ -39,7 +39,7 @@ end
 # FUNCTIONS - Diagnostics
 
 function status(r::Rocket)
-    println("  Status")
+    println("  $(r.name)")
     println("  - Gross:           $(round(typeof(1kg), gross(r)))")
     println("  - Prop Available:  $(round(typeof(1kg), r.propellant))")
     println("  - Prop Used:       $(round(typeof(1kg), (Starship.tank.total_mass - Starship.tank.dry_mass) - r.propellant))")
@@ -102,7 +102,7 @@ end
 
 function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false)
     if verbose
-        println("\nStationkeepingin $(ΔV.orbit): $(ΔV.dV)")
+        println("\nStation-keeping $(ΔV.orbit): $(ΔV.dV)")
     end
     burn!(r, ΔV.dV)
     if verbose
@@ -125,7 +125,7 @@ function stage!(r::Rocket)
     # Get the payload as a new standalone object
     upper = r.payload
     # "separate" the active stage by setting it to nopayload
-    lower = Rocket(r.name, nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+    lower = Rocket(split(r.name, " >> ")[1], nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
     return (lower, upper)
 end
 
@@ -152,6 +152,7 @@ function transfer_crew!(crewed::Rocket, uncrewed::Rocket)
     new_uncrewed = pop(crewed)
     # Add the crew to the old uncrewed
     new_crewed = add_crew(uncrewed, crew)
+    new_crewed.name = new_crewed.name * " >> " * crew.name
     return (new_crewed, new_uncrewed)
 end
 
@@ -169,8 +170,12 @@ function pop(r::Rocket)
     end
 
     # reverse!(elements)
+    # new_rocket.name = split(new_rocket.name, " >> ")[1]
     new_rocket = elements[1]
+    new_rocket.name = split(new_rocket.name, " >> ")[1]
+
     for stage in elements[2:end]
+        stage.name = split(stage.name, " >> ")[1]
         new_rocket = dock!(new_rocket, stage)
     end
 
