@@ -125,13 +125,14 @@ function stage!(r::Rocket)
     # Get the payload as a new standalone object
     upper = r.payload
     # "separate" the active stage by setting it to nopayload
-    lower = Rocket(nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+    lower = Rocket(r.name, nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
     return (lower, upper)
 end
 
 
 function dock!(new_primary::Payload, new_payload::Payload)
-    Rocket(new_payload, new_primary.tank, new_primary.engine)
+    new_name = "$(new_primary.name)_$(new_payload.name)"
+    Rocket(new_name, new_payload, new_primary.tank, new_primary.engine)
 end
 
 

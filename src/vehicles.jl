@@ -23,6 +23,7 @@ A single stage rocket, with a payload which could potentially be another rocket
 thus making it multi-stage.
 """
 mutable struct Rocket <: Payload
+    name::String
     payload::Payload
     tank::Tank
     engine::Engine
@@ -31,16 +32,20 @@ mutable struct Rocket <: Payload
     sideboosters::Array{Rocket} # Side booster can fire engines along with core stage
 end
 
+function Rocket(name::String, payload::Payload, tank::Tank, engine::Engine; throttle::Number = 1.0)
+    Rocket(name, payload, tank, engine, throttle, max_propellant(tank), Rocket[])
+end
+
 function Rocket(payload::Payload, tank::Tank, engine::Engine; throttle::Number = 1.0)
-    Rocket(payload, tank, engine, throttle, max_propellant(tank), Rocket[])
+    Rocket("unnamed", payload, tank, engine, throttle, max_propellant(tank), Rocket[])
 end
 
 function without_payload(r::Rocket)
-    Rocket(nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+    Rocket(r.name, nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
 end
 
 function with_payload(r::Rocket, new_payload::Payload)
-    Rocket(new_payload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+    Rocket(r.name, new_payload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
 end
 
 """
@@ -67,7 +72,7 @@ struct CrewPayload <: Payload
 end
 
 function Base.show(io::IO, r::Rocket)
-    println("Rocket:")
+    println("Rocket: $(r.name)")
     println(" - Current Gross  = $(round(typeof(1kg), gross(r)))")
     println(" - Prop Available = $(round(typeof(1kg), r.propellant))")
     percent_available = r.propellant / max_propellant(r.tank) * 100
