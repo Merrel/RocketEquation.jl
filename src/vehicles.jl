@@ -38,15 +38,25 @@ function Rocket(name::String, payload::Payload, tank::Tank, engine::Engine; thro
     Rocket(name, payload, tank, engine, throttle, max_propellant(tank), Rocket[])
 end
 
+function Rocket(tank::Tank, engine::Engine; throttle::Number = 1.0)
+    Rocket("unnamed", nopayload, tank, engine, throttle, max_propellant(tank), Rocket[])
+end
+
+function Rocket(name::String, tank::Tank, engine::Engine; throttle::Number = 1.0)
+    Rocket(name, nopayload, tank, engine, throttle, max_propellant(tank), Rocket[])
+end
+
 function Rocket(payload::Payload, tank::Tank, engine::Engine; throttle::Number = 1.0)
     Rocket("unnamed", payload, tank, engine, throttle, max_propellant(tank), Rocket[])
 end
 
 function without_payload(r::Rocket)
-    Rocket(r.name, nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
+    new_name = split(r.name, " >> ")[1]
+    Rocket(new_name, nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
 end
 
 function with_payload(r::Rocket, new_payload::Payload)
+    new_name = r.name * " >> " * new_payload.name
     Rocket(r.name, new_payload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
 end
 

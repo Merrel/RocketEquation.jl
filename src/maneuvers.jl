@@ -141,7 +141,7 @@ end
 
 function burn!(r::Rocket, ΔV::TrajCorrection; verbose::Bool=false, missionlog=nothing)
     if verbose
-        println("\nTrajectory correction during $(ΔV.src) -> $(ΔV.dst): $(ΔV.dV)")
+        println("\nTrajectory correction during $(ΔV.transfer.src) -> $(ΔV.transfer.dst): $(ΔV.transfer.dV)")
     end
     burn!(r, ΔV.dV)
     if verbose
@@ -149,7 +149,7 @@ function burn!(r::Rocket, ΔV::TrajCorrection; verbose::Bool=false, missionlog=n
     end
     # Mission Logging
     if missionlog != nothing
-        push!(missionlog, [typeof(ΔV) ΔV.src ΔV.dst ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+        push!(missionlog, [typeof(ΔV) ΔV.transfer.src ΔV.transfer.dst ΔV.transfer.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
     end
     return nothing
 end
@@ -191,7 +191,6 @@ function transfer_crew!(crewed::Rocket, uncrewed::Rocket; missionlog=nothing)
     new_uncrewed = pop(crewed)
     # Add the crew to the old uncrewed
     new_crewed = add_crew(uncrewed, crew)
-    new_crewed.name = new_crewed.name * " >> " * crew.name
 
     if missionlog != nothing
         push!(missionlog, [CrewTransfer last(missionlog).End last(missionlog).End 0m/s name(new_uncrewed) gross(new_uncrewed) split(new_uncrewed.name, " >> ")[1] propellant(new_uncrewed)])
