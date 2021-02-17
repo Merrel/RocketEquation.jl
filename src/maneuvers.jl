@@ -9,12 +9,14 @@ export ΔVonly, Transfer, StationKeep, TrajCorrection, RPOD,
 abstract type Maneuver end
 abstract type AbstractDocking <: Maneuver end
 abstract type AbstractStaging <: Maneuver end
+abstract type AbstractPropTransfer <: Maneuver end
 abstract type AbstractCrewTransfer <: Maneuver end
 abstract type ΔV <: Maneuver end
 
 struct Docking <: AbstractDocking end
 struct Staging <: AbstractStaging end
 struct CrewTransfer <: AbstractCrewTransfer end
+struct PropTransfer <: AbstractPropTransfer end
 
 struct ΔVonly <: ΔV
     dV::typeof(1.0m/s)
@@ -76,7 +78,9 @@ end
 function begin_mission()
     println("\n=============================================\nBegin Mission")
     missionlog = DataFrame(
-        Event = Type[], Start=String[], End=String[], ΔV = [], VehicleName=String[], VehicleGross=[], ActiveName=String[], ActiveProp = []
+        Event = Type[], Start=String[], End=String[], ΔV = [], 
+                VehicleName=String[], VehicleGross=[], ActiveName=String[], 
+                ActiveProp = [], InitialT2W = Number[]
     )
     return missionlog
 end
@@ -103,13 +107,15 @@ function burn!(r::Rocket, ΔV::Transfer; verbose::Bool=false, missionlog=nothing
     if verbose
         println("\nSegment from $(ΔV.src) -> $(ΔV.dst): $(ΔV.dV)")
     end
+    # Compute T2W at begining of burn
+    initT2W = t2w(r)
     burn!(r, ΔV.dV)
     if verbose
         status(r)
     end
     # Mission Logging
-    if missionlog != nothing
-        push!(missionlog, [typeof(ΔV) ΔV.src ΔV.dst ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+    if missionlog !== nothing
+        push!(missionlog, [typeof(ΔV) ΔV.src ΔV.dst ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r) initT2W])
     end
     return nothing
 end
@@ -128,28 +134,32 @@ function burn!(r::Rocket, ΔV::StationKeep; verbose::Bool=false, missionlog=noth
     if verbose
         println("\nStation-keeping $(ΔV.orbit): $(ΔV.dV)")
     end
+    # Compute T2W at begining of burn
+    initT2W = t2w(r)
     burn!(r, ΔV.dV)
     if verbose
         status(r)
     end
     # Mission Logging
-    if missionlog != nothing
-        push!(missionlog, [typeof(ΔV) ΔV.orbit ΔV.orbit ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+    if missionlog !== nothing
+        push!(missionlog, [typeof(ΔV) ΔV.orbit ΔV.orbit ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r) initT2W])
     end
     return nothing
 end
 
 function burn!(r::Rocket, ΔV::TrajCorrection; verbose::Bool=false, missionlog=nothing)
     if verbose
-        println("\nTrajectory correction during $(ΔV.transfer.src) -> $(ΔV.transfer.dst): $(ΔV.transfer.dV)")
+        println("\nTrajectory correction during $(ΔV.transfer.src) -> $(ΔV.transfer.dst): $(ΔV.dV)")
     end
+    # Compute T2W at begining of burn
+    initT2W = t2w(r)
     burn!(r, ΔV.dV)
     if verbose
         status(r)
     end
     # Mission Logging
-    if missionlog != nothing
-        push!(missionlog, [typeof(ΔV) ΔV.transfer.src ΔV.transfer.dst ΔV.transfer.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+    if missionlog !== nothing
+        push!(missionlog, [typeof(ΔV) ΔV.transfer.src ΔV.transfer.dst ΔV.dV name(r) gross(r) split(r.name, " >> ")[1] propellant(r) initT2W])
     end
     return nothing
 end
@@ -161,24 +171,35 @@ function stage!(r::Rocket; missionlog=nothing)
     # "separate" the active stage by setting it to nopayload
     lower = Rocket(split(r.name, " >> ")[1], nopayload, r.tank, r.engine, r.throttle, r.propellant, r.sideboosters)
 
-    if missionlog != nothing
-        push!(missionlog, [Staging last(missionlog).End last(missionlog).End 0m/s name(lower) gross(lower) split(lower.name, " >> ")[1] propellant(lower)])
-        push!(missionlog, [Staging last(missionlog).End last(missionlog).End 0m/s name(upper) gross(upper) split(upper.name, " >> ")[1] propellant(upper)])
+    if missionlog !== nothing
+        push!(missionlog, [Staging last(missionlog).End last(missionlog).End 0m/s name(lower) gross(lower) split(lower.name, " >> ")[1] propellant(lower)  0.0])
+        push!(missionlog, [Staging last(missionlog).End last(missionlog).End 0m/s name(upper) gross(upper) split(upper.name, " >> ")[1] propellant(upper)  0.0])
     end
     return (lower, upper)
 end
 
 
-function dock!(new_primary::Payload, new_payload::Payload)
+function dock!(new_primary::Payload, new_payload::Payload; missionlog=nothing)
     new_name = "$(new_primary.name) >> $(new_payload.name)"
-    Rocket(new_name, new_payload, new_primary.tank, new_primary.engine)
+    r = Rocket(new_name, new_payload, new_primary.tank, new_primary.engine)
+
+    if missionlog !== nothing
+        push!(missionlog, [Docking last(missionlog).End last(missionlog).End 0m/s name(r) gross(r) split(r.name, " >> ")[1] propellant(r)  0.0])
+    end
+    return r
 end
 
 
-function transfer_prop!(recipient::Rocket, donor::Rocket)
+function transfer_prop!(recipient::Rocket, donor::Rocket; missionlog=nothing)
     # Add prop to the recipient
     recipient.propellant += donor.propellant
     donor.propellant = 0kg
+
+    if missionlog !== nothing
+        push!(missionlog, [PropTransfer last(missionlog).End last(missionlog).End 0m/s name(recipient) gross(recipient) split(recipient.name, " >> ")[1] propellant(recipient) 0.0])
+        push!(missionlog, [PropTransfer last(missionlog).End last(missionlog).End 0m/s name(donor) gross(donor) split(donor.name, " >> ")[1] propellant(donor) 0.0])
+    end
+
 end
 
 # -------------------------------------------------------------------------------------------------
@@ -193,8 +214,8 @@ function transfer_crew!(crewed::Rocket, uncrewed::Rocket; missionlog=nothing)
     new_crewed = add_crew(uncrewed, crew)
 
     if missionlog != nothing
-        push!(missionlog, [CrewTransfer last(missionlog).End last(missionlog).End 0m/s name(new_uncrewed) gross(new_uncrewed) split(new_uncrewed.name, " >> ")[1] propellant(new_uncrewed)])
-        push!(missionlog, [CrewTransfer last(missionlog).End last(missionlog).End 0m/s name(new_crewed) gross(new_crewed) split(new_crewed.name, " >> ")[1] propellant(new_crewed)])
+        push!(missionlog, [CrewTransfer last(missionlog).End last(missionlog).End 0m/s name(new_uncrewed) gross(new_uncrewed) split(new_uncrewed.name, " >> ")[1] propellant(new_uncrewed) 0.0])
+        push!(missionlog, [CrewTransfer last(missionlog).End last(missionlog).End 0m/s name(new_crewed) gross(new_crewed) split(new_crewed.name, " >> ")[1] propellant(new_crewed) 0.0])
     end
 
     return (new_crewed, new_uncrewed)

@@ -45,10 +45,9 @@ ESM = Rocket("ESM", nopayload, tank_esm, engine_esm)
 Orion = dock!(Orion, Crew)
 # - Orion+ESM
 ESM_Orion = dock!(ESM, Orion)
-gross(ESM_Orion)
 # - Orion+ESM+Starship
 Starship_ESM_Orion = dock!(Starship, ESM_Orion)
-gross(Starship_ESM_Orion)
+
 
 # -------------------------------------------------------------------------------------------------
 # Define Mission
@@ -72,12 +71,12 @@ print_location("LEO")
 
 
 # 1. Earth Departure: LEO to TLI
-burn!(Starship_ESM_Orion, leo_2_tli, verbose=true, missionlog=events)
+burn!(Starship_ESM_Orion, leo_2_tli, verbose=false, missionlog=events)
 # action = leo_2_tli; vehicle = Starship_ESM_Orion;
 # push!(df, [typeof(action) action.src action.dst action.dV name(vehicle) gross(vehicle) split(vehicle.name, " >> ")[1] propellant(vehicle)])
 
 # 2. NRHO Arrival: TLI to NRHO
-burn!(Starship_ESM_Orion, tli_2_nrho, verbose=true, missionlog=events)
+burn!(Starship_ESM_Orion, tli_2_nrho, verbose=false, missionlog=events)
 # action = tli_2_nrho; vehicle = Starship_ESM_Orion;
 # push!(df, [typeof(action) action.src action.dst action.dV name(vehicle) gross(vehicle) split(vehicle.name, " >> ")[1] propellant(vehicle)])
 # print_location("NRHO")
@@ -94,19 +93,28 @@ burn!(Starship_ESM_Orion, tli_2_nrho, verbose=true, missionlog=events)
 # push!(events, [CrewTransfer last(events).End last(events).End 0m/s name(Starship) gross(Starship) split(Starship.name, " >> ")[1] propellant(Starship)])
 
 # 4. To LLO: NRHO to LLO
-burn!(Starship, nrho_2_llo, verbose=true, missionlog=events)
+burn!(Starship, nrho_2_llo, verbose=false, missionlog=events)
 # action = nrho_2_llo; vehicle = Starship;
 # push!(df, [typeof(action) action.src action.dst action.dV name(vehicle) gross(vehicle) split(vehicle.name, " >> ")[1] propellant(vehicle)])
 
 # 5. Descent & Landing: LLO to Moon
-burn!(Starship, llo_2_moon, verbose=true, missionlog=events)
+burn!(Starship, llo_2_moon, verbose=false, missionlog=events)
 print_location("Moon")
 
-boiloff!(Starship, 0.002/hr, 72hr, verbose=true, missionlog=events)
+boiloff!(Starship, 0.002/hr, 72hr, verbose=false, missionlog=events)
 
-# # 6. Ascent: Moon to LLO
-# burn!(Starship, moon_2_LLO, verbose=true, missionlog=events)
-# print_location("LLO")
+# 6. Ascent: Moon to LLO
+burn!(Starship, moon_2_LLO, verbose=false, missionlog=events)
+print_location("LLO")
 
+# 7. Rendezvous
+transfer_prop!(ESM_Orion, Starship, missionlog=events)
+Starship_ESM_Orion = dock!(Starship, ESM_Orion, missionlog=events)
 
 events
+
+
+# thrust(Starship)
+
+# gross(Starship)
+

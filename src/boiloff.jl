@@ -38,7 +38,7 @@ function boiloff!(r::Rocket, rate, duration; verbose=false, missionlog=nothing)
     end
 
     if missionlog != nothing
-        push!(missionlog, [Boiloff last(missionlog).End last(missionlog).End 0m/s name(r) gross(r) split(r.name, " >> ")[1] propellant(r)])
+        push!(missionlog, [Boiloff last(missionlog).End last(missionlog).End 0m/s name(r) gross(r) split(r.name, " >> ")[1] propellant(r) 0.0])
     end
 
     return nothing
