@@ -74,14 +74,20 @@ end
 
 # -------------------------------------------------------------------------------------------------
 # FUNCTIONS - Actions
+struct Initial end
 
-function begin_mission()
+function begin_mission(r::Rocket, loc::String)
     println("\n=============================================\nBegin Mission")
     missionlog = DataFrame(
         Event = Type[], Start=String[], End=String[], ΔV = [], 
                 VehicleName=String[], VehicleGross=[], ActiveName=String[], 
                 ActiveProp = [], InitialT2W = Number[]
     )
+
+    push!(missionlog,
+          [Initial loc loc 0m/s name(r) gross(r) split(r.name, " >> ")[1] propellant(r) 0.0]
+    )
+
     return missionlog
 end
 
@@ -182,6 +188,7 @@ end
 function dock!(new_primary::Payload, new_payload::Payload; missionlog=nothing)
     new_name = "$(new_primary.name) >> $(new_payload.name)"
     r = Rocket(new_name, new_payload, new_primary.tank, new_primary.engine)
+    r.propellant = new_primary.propellant
 
     if missionlog !== nothing
         push!(missionlog, [Docking last(missionlog).End last(missionlog).End 0m/s name(r) gross(r) split(r.name, " >> ")[1] propellant(r)  0.0])
